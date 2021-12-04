@@ -1,0 +1,31 @@
+----------------------------274445789692433242971499
+Content-Disposition: form-data; name="file"; filename="swagger.txt"
+Content-Type: text/plain
+
+openapi: 3.0.0
+info:
+  title: Alert Rule API
+  description: Alert Rule Demo API
+  contact:
+    name: Xuan Dong
+    url: http://dev.soratrust.io
+  version: 1.0.0
+server:
+  - url: http://dev.soratrust.io
+paths:
+  /alert-rule:
+    description: alert rule resource
+    get:
+      description: Get alert rule
+      parameters:
+        -in: query
+        int: id
+        required: true
+      responses:
+        200:
+          description: Success Response
+         
+           
+              
+  
+----------------------------274445789692433242971499--
