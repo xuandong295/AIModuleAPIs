@@ -13,7 +13,8 @@ from rest_framework.generics import ListAPIView
 # define the path to the face detector
 from rest_framework import views
 from rest_framework.parsers import FileUploadParser, BaseParser, MultiPartParser
-
+from wsgiref.util import FileWrapper
+import base64
 FACE_DETECTOR_PATH = cv2.data.haarcascades + "haarcascade_frontalface_default.xml"
 from rest_framework.decorators import api_view
 from rest_framework.decorators import parser_classes
@@ -26,12 +27,12 @@ def detect(request):
     if request.method == "POST":
         # initialize the data dictionary to be returned by the request
         data = {"success": False}
-
-
         # check to see if an image was uploaded
         if request.FILES.get("image", None) is not None:
             # grab the uploaded image
             image = _grab_image(stream=request.FILES["image"])
+            image = Image.fromarray(image)
+            image.save('anh.jpg')
         # otherwise, assume that a URL was passed in
         else:
             # grab the URL from the request
@@ -45,6 +46,7 @@ def detect(request):
             image = _grab_image(url=url)
         # convert the image to grayscale, load the face cascade detector,
         # and detect faces in the image
+        image = cv2.imread('anh.jpg')
         image_gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
         detector = cv2.CascadeClassifier(FACE_DETECTOR_PATH)
         rects = detector.detectMultiScale(image_gray, scaleFactor=1.1)
@@ -56,15 +58,23 @@ def detect(request):
         # cv2.imshow("Result", image)
         # cv2.waitKey(0)
         print(image.shape)
-        imageRGB = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        # imageRGB = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
-        img = Image.fromarray(imageRGB)
+        img = Image.fromarray(image)
         img.save('my.png')
-        img.show()
+        # img.show()
         data.update({"num_faces": len(rects), "faces": rects, "success": True})
         try:
-            with open('my.png', "rb") as f:
-                return HttpResponse(f.read(), content_type="image/jpeg")
+            # with open('my.png', "rb") as f:
+            #     response = HttpResponse(f.read(), content_type="image/jpeg")
+            #     response['Content-Disposition'] = "attachment; filename=my.png"
+            #     return response
+            with open("my.png", "rb") as image_file:
+                encoded_string = base64.b64encode(image_file.read())
+
+                result = "data:image/jpeg;base64," + str(encoded_string.decode("utf-8"))
+                print(result)
+                return JsonResponse(json.dumps(result), content_type="application/json", safe=False)
         except IOError:
             red = Image.new('RGBA', (1, 1), (255, 0, 0, 0))
             response = HttpResponse(content_type="image/jpeg")
